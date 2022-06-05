@@ -1,2 +1,2 @@
 # JPA-practice
-JPA 연습용
+JPA 연습용 repository
