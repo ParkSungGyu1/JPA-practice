@@ -1,6 +1,7 @@
 package com.spring.jpaapp.repository;
 
 import com.spring.jpaapp.model.Member;
+import com.spring.jpaapp.service.MemberService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,30 +10,58 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import javax.persistence.EntityManager;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@Transactional
 class MemberRepositoryTest {
     @Autowired
     MemberRepository memberRepository;
+    @Autowired
+    MemberService memberService;
+    @Autowired
+    EntityManager em;
 
     @Test
-    @Transactional
-    @Rollback(false)
-    public void testMember() throws Exception{
+    public void 회원가입() throws Exception{
         //given
         Member member = new Member();
-        member.setUsername("memberA");
+        member.setName("kim");
 
         //when
-        Long saveid = memberRepository.save(member);
-        Member findmember = memberRepository.find(saveid);
+        Long saveId = memberService.join(member);
+
 
         //then
-        assertThat(findmember.getId()).isEqualTo(member.getId());
-        assertThat(findmember.getUsername()).isEqualTo(member.getUsername());
-        assertThat(findmember).isEqualTo(member);
+        em.flush();
+        assertEquals(member, memberRepository.findOne(saveId));
+
+    }
+
+    @Test
+    public void 중복_회원_예외() throws Exception{
+        //given
+        Member member1 = new Member();
+        member1.setName("kim");
+
+        Member member2 = new Member();
+        member2.setName("kim");
+
+        //when
+        memberService.join(member1);
+        try{
+            memberService.join(member2); // 예외 발생 해야함.
+        }catch (IllegalStateException e){
+            return;
+        }
+
+
+        //then
+
+        fail("예외가 발생해야 한다.");
 
     }
 }
